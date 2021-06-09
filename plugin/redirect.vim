@@ -26,9 +26,13 @@ function Redirect(cmd) abort
                     \ matchstr(a:cmd, '^!\zs.*')
         let l:output = system(l:cmd)
     else
-        redir => l:output
+        if v:version > 704 || v:version == 704 && has("patch2008")
+            let l:output = execute(a:cmd)
+        else
+            redir => l:output
             execute a:cmd
-        redir END
+            redir END
+        endif
     endif
     call s:AppendToRedirectBuffer(l:output)
 endfunction
@@ -48,7 +52,7 @@ function s:AppendToRedirectBuffer(string)
         execute 'vertical sbuffer '.s:Redirect_buffer
         wincmd L
     else
-        call s:Win_gotoid(l:win_nr)
+        call s:Win_gotoid(s:Win_getid(l:win_nr))
     endif
     if line('$') == 1 && getline(1) == ""
         call setline(1, l:output)
